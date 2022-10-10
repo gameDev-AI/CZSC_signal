@@ -206,11 +206,13 @@ def filter_data_by_code(stockcodes, start_date, end_date):
     #print(stockcodes.shape[0])
     # if True:
     export_signals = [] 
+    time_temp = datetime.datetime.now() - datetime.timedelta(days=200)
+    trd_start_dt = time_temp.strftime('%Y-%m-%d')
     for code in stockcodes["code"]:
         if ("sh.0" not in code) and ("bj.8" not in code)  and ("bj.4" not in code) and ("sh.688" not in code) and ("sz.399" not in code):
             #print("Downloading day:" + code)
             # k_rs = bs.query_history_k_data_plus("sz.003037", "date,time,code,open,high,low,close,volume,amount,adjustflag", start_date, end_date, frequency="30", adjustflag="3")
-            k_rs = bs.query_history_k_data_plus(code, "date,time,code,open,high,low,close,volume,amount,adjustflag", start_date, end_date, frequency="30", adjustflag="3")
+            k_rs = bs.query_history_k_data_plus(code, "date,time,code,open,high,low,close,volume,amount,adjustflag", trd_start_dt, end_date, frequency="30", adjustflag="3")
             df_stockload = k_rs.get_data()
             c_len = df_stockload.shape[0]
             if c_len > 0:
@@ -221,7 +223,7 @@ def filter_data_by_code(stockcodes, start_date, end_date):
                 df_stockload['Ma60'] = df_stockload.close.rolling(window=60).mean()#pd.rolling_mean(df_stockload.close,window=30)
                 df_stockload['Ma108'] = df_stockload.close.rolling(window=108).mean()#pd.rolling_mean(df_stockload.close,window=30)
                 df_stockload['Ma216'] = df_stockload.close.rolling(window=216).mean()#pd.rolling_mean(df_stockload.close,window=30)
-                df_stockload['Ma2000'] = df_stockload.close.rolling(window=2000).mean()#pd.rolling_mean(df_stockload.close,window=30)
+                #df_stockload['Ma2000'] = df_stockload.close.rolling(window=2000).mean()#pd.rolling_mean(df_stockload.close,window=30)
                 
                 
                 close = float2(df_stockload['close'][c_len - 1],2)
@@ -229,7 +231,7 @@ def filter_data_by_code(stockcodes, start_date, end_date):
                 line60 = float2(df_stockload['Ma60'][c_len - 1],2)
                 line108 = float2(df_stockload['Ma108'][c_len - 1],2)
                 line216 = float2(df_stockload['Ma216'][c_len - 1],2)
-                line2000 = float2(df_stockload['Ma2000'][c_len - 1],2)
+                #line2000 = float2(df_stockload['Ma2000'][c_len - 1],2)
                 
                 
                 cross_point1 = find_cross_point(df_stockload['Ma27'], df_stockload['Ma60'], c_len)
@@ -241,16 +243,20 @@ def filter_data_by_code(stockcodes, start_date, end_date):
                 
                 cross_point6 = find_cross_point(df_stockload['Ma108'], df_stockload['Ma216'], c_len)
                 
-                min_cross = cross_point3 > cross_point2 and cross_point2 > cross_point1
-                med_cross = cross_point5 > cross_point4
+                #min_cross = cross_point3 > cross_point2 and cross_point2 > cross_point1
+                #med_cross = cross_point5 > cross_point4
                 #max_cross = not (cross_point6 == c_len) and cross_point6 > cross_point3
+                
+                min_cross = cross_point6 > cross_point3 and cross_point3 > cross_point2
                 max_cross = True
                 
                 lineup = line27 > line60 and line27 > line108 and line27 > line216#3大于7，大于13 大于 27日均线
                 
-                priceup = close > line108 and close > line2000#收盘价过13日和250日均线
+                priceup = close > line108
+                #priceup = close > line108 and close > line2000#收盘价过13日和250日均线
                 
-                cross_flag = not (cross_point1 == c_len) and min_cross and med_cross and max_cross
+                #cross_flag = not (cross_point1 == c_len) and min_cross and med_cross and max_cross
+                cross_flag = not (cross_point1 == c_len) and min_cross
                 
                 if lineup and priceup and cross_flag:
                     print(df_stockload['code'][cross_point6])
@@ -324,7 +330,7 @@ def get_delta_day():
             
 if __name__ == '__main__':
     if True:       
-        time_temp = datetime.datetime.now() - datetime.timedelta(days=2000)
+        time_temp = datetime.datetime.now() - datetime.timedelta(days=500)
         start_dt = time_temp.strftime('%Y-%m-%d')
         
         day = get_delta_day()
